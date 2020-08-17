@@ -28,6 +28,6 @@ public class Day {
     @NotBlank
     private DayOfWeek dayOfWeek;
     @OneToMany
-    private List<Point> points;
+    private List<Shift> shifts;
 
 }

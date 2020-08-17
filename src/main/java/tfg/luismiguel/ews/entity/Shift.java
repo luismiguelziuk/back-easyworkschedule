@@ -24,7 +24,11 @@ public class Shift {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     @NotBlank
-    private Long hours;
+    private Double hours;
     @ManyToOne
     private Worker worker;
+    @ManyToOne
+    private Point point;
+    @ManyToOne
+    private Day day;
 }

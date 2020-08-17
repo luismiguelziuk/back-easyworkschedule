@@ -20,7 +20,7 @@ import java.util.List;
 @Getter
 @Setter
 @Entity
-@Table(name = "Worker")
+@Table(name = "worker")
 public class Worker {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,9 +29,9 @@ public class Worker {
     @Column(unique = true)
     private String name;
     @NotBlank
-    private Long workHours;
+    private Double workHours;
     @NotBlank
-    private Long accumulatedHours;
+    private Double accumulatedHours;
     @OneToMany
     private List<Shift> shifts;
 }
