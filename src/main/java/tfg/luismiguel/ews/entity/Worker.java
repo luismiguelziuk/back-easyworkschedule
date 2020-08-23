@@ -13,6 +13,7 @@ import javax.persistence.Id;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
+import java.time.LocalDate;
 import java.util.List;
 
 @AllArgsConstructor
@@ -32,6 +33,7 @@ public class Worker {
     private Double workHours;
     @NotBlank
     private Double accumulatedHours;
+    private LocalDate dismissDate;
     @OneToMany
     private List<Shift> shifts;
 }

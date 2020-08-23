@@ -29,6 +29,4 @@ public class Shift {
     private Worker worker;
     @ManyToOne
     private Point point;
-    @ManyToOne
-    private Day day;
 }

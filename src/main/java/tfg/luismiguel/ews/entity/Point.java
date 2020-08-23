@@ -12,6 +12,7 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.NotBlank;
+import java.time.LocalDate;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -29,4 +30,5 @@ public class Point {
     private Double openTime;
     @NotBlank
     private Double closeTime;
+    private LocalDate dismissDate;
 }

@@ -18,6 +18,6 @@ import javax.persistence.Table;
 @Entity
 @Table(name = "worker")
 public class TouristInformer extends Worker {
-    @Enumerated(EnumType.ORDINAL)
+    @Enumerated(EnumType.STRING)
     private Team team;
 }

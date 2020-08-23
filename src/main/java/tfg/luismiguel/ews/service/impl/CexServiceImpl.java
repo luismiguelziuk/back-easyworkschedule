@@ -5,7 +5,8 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tfg.luismiguel.ews.entity.cex.Team;
+import tfg.luismiguel.ews.dto.cex.TouristInformerCreationDTO;
+import tfg.luismiguel.ews.dto.cex.TouristPointCreationDTO;
 import tfg.luismiguel.ews.entity.cex.TouristInformer;
 import tfg.luismiguel.ews.entity.cex.TouristPoint;
 import tfg.luismiguel.ews.repository.cex.TouristInformerRepository;
@@ -23,23 +24,24 @@ public class CexServiceImpl implements CexService {
     private TouristInformerRepository touristInformerRepository;
 
     @Override
-    public TouristPoint createTouristPoint(String name, Double openTime, Double closeTime, Long priority) {
+    public TouristPoint createTouristPoint(TouristPointCreationDTO touristPointDTO) {
         TouristPoint touristPoint = new TouristPoint();
-        touristPoint.setName(name);
-        touristPoint.setOpenTime(openTime);
-        touristPoint.setCloseTime(closeTime);
-        touristPoint.setPriority(priority);
+        touristPoint.setName(touristPointDTO.getName());
+        touristPoint.setOpenTime(touristPointDTO.getOpenTime());
+        touristPoint.setCloseTime(touristPointDTO.getCloseTime());
+        touristPoint.setPriority(touristPointDTO.getPriority());
+        touristPoint.setTrainedTeams(touristPointDTO.getTrainedTeams());
         touristPointRepository.save(touristPoint);
         return touristPoint;
     }
 
     @Override
-    public TouristInformer createTouristInformer(String name, Double hours, Team team ) {
+    public TouristInformer createTouristInformer(TouristInformerCreationDTO touristInformerDTO) {
         TouristInformer touristInformer = new TouristInformer();
-        touristInformer.setName(name);
-        touristInformer.setWorkHours(hours);
+        touristInformer.setName(touristInformerDTO.getName());
+        touristInformer.setWorkHours(touristInformerDTO.getWorkHours());
         touristInformer.setAccumulatedHours(0.0);
-        touristInformer.setTeam(team);
+        touristInformer.setTeam(touristInformerDTO.getTeam());
         touristInformerRepository.save(touristInformer);
         return touristInformer;
     }
