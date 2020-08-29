@@ -9,6 +9,7 @@ import tfg.luismiguel.ews.entity.Worker;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @AllArgsConstructor
@@ -19,5 +20,6 @@ import javax.persistence.Table;
 @Table(name = "worker")
 public class TouristInformer extends Worker {
     @Enumerated(EnumType.STRING)
+    @ManyToOne
     private Team team;
 }

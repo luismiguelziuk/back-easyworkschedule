@@ -8,32 +8,34 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import tfg.luismiguel.ews.dto.WeekDTO;
-import tfg.luismiguel.ews.entity.Week;
-import tfg.luismiguel.ews.service.TemporalService;
+import tfg.luismiguel.ews.dto.FillWeekDTO;
+import tfg.luismiguel.ews.exception.EwsException;
+import tfg.luismiguel.ews.service.AlgorithmService;
+
+import java.util.List;
 
 @RestController
-@RequestMapping("/api/temporal")
-public class TemporalController {
+@RequestMapping("/api/algorithm")
+public class AlgorithmController {
     @Autowired
-    TemporalService temporalService;
+    AlgorithmService algorithmService;
 
-    @Operation(summary = "Create a week")
+    @Operation(summary = "Fill a week")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Created the week",
+            @ApiResponse(responseCode = "200", description = "Fill the week",
                     content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Week.class))}),
+                            schema = @Schema(implementation = String.class))}),
             @ApiResponse(responseCode = "400", description = "Invalid data",
                     content = @Content),
             @ApiResponse(responseCode = "404", description = "Week not created",
                     content = @Content)})
-    @PostMapping("/create/week")
-    public ResponseEntity<Week> createTouristInformer(@RequestBody WeekDTO weekDTO) {
-        Week week = temporalService.createWeek(weekDTO);
-        return new ResponseEntity<>(week, HttpStatus.CREATED);
+    @PutMapping("/fill/week")
+    public ResponseEntity<Boolean> fillWeek(@RequestBody FillWeekDTO fillWeekDTO) throws EwsException {
+        algorithmService.fillCompleteWeek(fillWeekDTO);
+        return new ResponseEntity<>(true, HttpStatus.CREATED);
     }
 }

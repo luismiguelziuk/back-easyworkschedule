@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tfg.luismiguel.ews.dto.WeekCreationDTO;
+import tfg.luismiguel.ews.dto.WeekDTO;
 import tfg.luismiguel.ews.entity.Day;
 import tfg.luismiguel.ews.entity.Week;
 import tfg.luismiguel.ews.repository.DayRepository;
@@ -28,12 +28,12 @@ public class TemporalServiceImpl implements TemporalService {
     private DayRepository dayRepository;
 
     @Override
-    public Week createWeek(WeekCreationDTO weekCreationDTO) {
+    public Week createWeek(WeekDTO weekDTO) {
         Week week = new Week();
-        week.setNumberOfWeek(weekCreationDTO.getNumberOfWeek());
-        week.setYear(weekCreationDTO.getYear());
+        week.setNumberOfWeek(weekDTO.getNumberOfWeek());
+        week.setYear(weekDTO.getYear());
         List<Day> days = new ArrayList<>();
-        for (int i = weekCreationDTO.getDayOfWeekStart().getValue(); i <= 7; i++) {
+        for (int i = weekDTO.getDayOfWeekStart().getValue(); i <= 7; i++) {
             days.add(createDay(i));
         }
         week.setDays(days);

@@ -6,8 +6,8 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import tfg.luismiguel.ews.dto.cex.TouristInformerCreationDTO;
-import tfg.luismiguel.ews.dto.cex.TouristPointCreationDTO;
+import tfg.luismiguel.ews.dto.cex.TouristInformerDTO;
+import tfg.luismiguel.ews.dto.cex.TouristPointDTO;
 import tfg.luismiguel.ews.entity.cex.TouristInformer;
 import tfg.luismiguel.ews.entity.cex.TouristPoint;
 import tfg.luismiguel.ews.repository.cex.TouristInformerRepository;
@@ -39,14 +39,14 @@ public class CexServiceTest {
     @Test
     public void createTouristPointTest() {
         when(touristPointRepository.save(any())).thenReturn(new TouristPoint());
-        cexService.createTouristPoint(new TouristPointCreationDTO());
+        cexService.createTouristPoint(new TouristPointDTO());
         verify(touristPointRepository, atLeast(1)).save(any());
     }
 
     @Test
     public void createTouristInformerTest() {
         when(touristPointRepository.save(any())).thenReturn(new TouristInformer());
-        cexService.createTouristInformer(new TouristInformerCreationDTO());
+        cexService.createTouristInformer(new TouristInformerDTO());
         verify(touristInformerRepository, atLeast(1)).save(any());
     }
 }

@@ -10,8 +10,12 @@ import tfg.luismiguel.ews.entity.cex.Team;
 @NoArgsConstructor
 @Getter
 @Setter
-public class TouristInformerCreationDTO {
-    private Team team;
+public class TeamDTO {
+    private Long id;
     private String name;
-    private Double workHours;
+
+    public TeamDTO(Team team) {
+        this.id = team.getId();
+        this.name = team.getName();
+    }
 }

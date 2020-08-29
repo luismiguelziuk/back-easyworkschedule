@@ -34,6 +34,4 @@ public class Worker {
     @NotBlank
     private Double accumulatedHours;
     private LocalDate dismissDate;
-    @OneToMany
-    private List<Shift> shifts;
 }

@@ -7,7 +7,7 @@ import lombok.Setter;
 import tfg.luismiguel.ews.entity.Point;
 
 import javax.persistence.Entity;
-import javax.persistence.OneToMany;
+import javax.persistence.ManyToMany;
 import javax.persistence.Table;
 import java.util.List;
 
@@ -19,6 +19,6 @@ import java.util.List;
 @Table(name = "point")
 public class TouristPoint extends Point {
     private Double priority;
-    @OneToMany
+    @ManyToMany
     private List<Team> trainedTeams;
 }
