@@ -68,8 +68,8 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     private Week lastWeekDatabase;
     private WeekDTO week;
     private Map<TouristInformerDTO, Double> availableWorkersHours = new LinkedHashMap<>();
-    private List<TouristPointDTO> touristPoints = new ArrayList<>();
-    private List<TouristPointDayProblemDTO> errorPoints = new ArrayList<>();
+    private final List<TouristPointDTO> touristPoints = new ArrayList<>();
+    private final List<TouristPointDayProblemDTO> errorPoints = new ArrayList<>();
 
     @Override
     public void fillCompleteWeek(FillWeekDTO fillWeekDTO) throws EwsException {
@@ -82,9 +82,8 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         // para ver si conseguimos la solucion parcial. Esto se intentara n veces tambien y si no se consigue se dara como irresoluble.
         mutateIfErrorFilling(fillWeekDTO);
         if (!errorPoints.isEmpty()) {
-            //TODO Afinar esto
-            String message = "";
-            errorPoints.forEach(touristPointDayProblemDTO -> message.concat(touristPointDayProblemDTO.getTouristPoint().getName()).concat(", "));
+            StringBuilder message = new StringBuilder();
+            errorPoints.forEach(problem -> message.append(problem.getTouristPoint().getName()).append(", "));
             throw new EwsException("No tiene solucion, no hay trabajadores suficientes para los puntos { " + message.substring(0, message.length() - 2) + " }");
         }
         // Generamos un weekKnappSackDTO con una copia de la semana actual y su salud.
@@ -301,40 +300,40 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                     switch (dayLastWeek.getDayOfWeek()) {
                         case MONDAY:
                             if (bonusDay) {
-                                week.getDays().get(1).getShifts().add(breakShift2);
+                                addBreakDay(breakShift2, DayOfWeek.TUESDAY);
                             }
-                            week.getDays().get(2).getShifts().add(breakShift);
+                            addBreakDay(breakShift, DayOfWeek.WEDNESDAY);
                             break;
                         case TUESDAY:
                         case WEDNESDAY:
                             if (bonusDay) {
-                                week.getDays().get(2).getShifts().add(breakShift2);
+                                addBreakDay(breakShift2, DayOfWeek.WEDNESDAY);
                             }
-                            week.getDays().get(3).getShifts().add(breakShift);
+                            addBreakDay(breakShift, DayOfWeek.THURSDAY);
                             break;
                         case THURSDAY:
                             //Si tambien tuvo descanso el miercoles pasado, estamos en el caso en que esta semana tambien descansa el jueves
                             if (lastWeekDatabase.getDays().get(2).getShifts().stream().anyMatch(shift -> shift.getPoint().getName().equals("Descanso")
                                     && Objects.equals(shift.getWorker().getId(), shiftLastWeek.getWorker().getId()))) {
-                                week.getDays().get(4).getShifts().add(breakShift);
+                                addBreakDay(breakShift, DayOfWeek.FRIDAY);
                             } else {
                                 if (bonusDay) {
-                                    week.getDays().get(4).getShifts().add(breakShift2);
+                                    addBreakDay(breakShift2, DayOfWeek.FRIDAY);
                                 }
-                                week.getDays().get(5).getShifts().add(breakShift);
+                                addBreakDay(breakShift, DayOfWeek.SATURDAY);
                             }
                             break;
                         case FRIDAY:
-                            week.getDays().get(6).getShifts().add(breakShift);
+                            addBreakDay(breakShift, DayOfWeek.SUNDAY);
                             break;
                         case SATURDAY:
                             if (bonusDay) {
-                                week.getDays().get(2).getShifts().add(breakShift2);
+                                addBreakDay(breakShift2, DayOfWeek.WEDNESDAY);
                             }
-                            week.getDays().get(0).getShifts().add(breakShift);
+                            addBreakDay(breakShift, DayOfWeek.MONDAY);
                             break;
                         case SUNDAY:
-                            week.getDays().get(1).getShifts().add(breakShift);
+                            addBreakDay(breakShift, DayOfWeek.TUESDAY);
                             break;
                     }
                 }
@@ -360,34 +359,34 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                     switch (lastStartBreak) {
                         case MONDAY:
                             if (bonusDay) {
-                                week.getDays().get(1).getShifts().add(shift1);
+                                addBreakDay(shift1, DayOfWeek.TUESDAY);
                             }
-                            week.getDays().get(2).getShifts().add(shift1);
-                            week.getDays().get(3).getShifts().add(shift2);
+                            addBreakDay(shift1, DayOfWeek.WEDNESDAY);
+                            addBreakDay(shift2, DayOfWeek.THURSDAY);
                             lastStartBreak = DayOfWeek.WEDNESDAY;
                             break;
                         case WEDNESDAY:
                             if (bonusDay) {
-                                week.getDays().get(2).getShifts().add(shift1);
+                                addBreakDay(shift1, DayOfWeek.WEDNESDAY);
                             }
-                            week.getDays().get(3).getShifts().add(shift1);
-                            week.getDays().get(4).getShifts().add(shift2);
+                            addBreakDay(shift1, DayOfWeek.THURSDAY);
+                            addBreakDay(shift2, DayOfWeek.FRIDAY);
                             lastStartBreak = DayOfWeek.THURSDAY;
                             break;
                         case THURSDAY:
                             if (bonusDay) {
-                                week.getDays().get(4).getShifts().add(shift1);
+                                addBreakDay(shift1, DayOfWeek.FRIDAY);
                             }
-                            week.getDays().get(5).getShifts().add(shift1);
-                            week.getDays().get(6).getShifts().add(shift2);
+                            addBreakDay(shift1, DayOfWeek.SATURDAY);
+                            addBreakDay(shift2, DayOfWeek.SUNDAY);
                             lastStartBreak = DayOfWeek.SATURDAY;
                             break;
                         case SATURDAY:
                             if (bonusDay) {
-                                week.getDays().get(2).getShifts().add(shift1);
+                                addBreakDay(shift1, DayOfWeek.WEDNESDAY);
                             }
-                            week.getDays().get(0).getShifts().add(shift1);
-                            week.getDays().get(1).getShifts().add(shift2);
+                            addBreakDay(shift1, DayOfWeek.MONDAY);
+                            addBreakDay(shift2, DayOfWeek.TUESDAY);
                             lastStartBreak = DayOfWeek.MONDAY;
                             break;
                     }
@@ -396,13 +395,22 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         }
     }
 
+    private void addBreakDay(ShiftDTO breakShift, DayOfWeek dayOfWeek) {
+        // Comprobamos que no tiene asignado ya los descanso para el dia que le corresponde.
+        if (week.getDays().get(dayOfWeek.getValue()-1).getShifts().stream()
+                .noneMatch(shiftDTO -> shiftDTO.getPoint().getName().equals("Descanso")
+                        && shiftDTO.getWorker().getId().equals(breakShift.getWorker().getId()))) {
+            week.getDays().get(dayOfWeek.getValue()-1).getShifts().add(breakShift);
+        }
+    }
+
     private void getOrderedTouristPoints() {
-        touristPoints = touristPointRepository.findAll().stream()
+        touristPoints.addAll(touristPointRepository.findAll().stream()
                 .map(TouristPointDTO::new)
                 .filter(touristPoint -> !touristPoint.getName().equals("Descanso"))
                 .sorted(Comparator.comparing(TouristPointDTO::getPriority)
                         .reversed())
-                .collect(Collectors.toList());
+                .collect(Collectors.toList()));
     }
 
     private void checkBusyBreaks(List<Long> busyWorkers, DayDTO day) {
