@@ -27,6 +27,6 @@ public class WeekDTO {
         this.id = week.getId();
         this.numberOfWeek =week.getNumberOfWeek();
         this.year = week.getYear();
-        this.days = week.getDays().stream().map(day -> new DayDTO(day)).collect(Collectors.toList());
+        this.days = week.getDays().stream().map(DayDTO::new).collect(Collectors.toList());
     }
 }

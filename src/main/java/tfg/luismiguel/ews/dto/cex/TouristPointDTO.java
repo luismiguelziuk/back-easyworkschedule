@@ -30,8 +30,8 @@ public class TouristPointDTO {
         this.openTime = touristPoint.getOpenTime();
         this.closeTime = touristPoint.getCloseTime();
         this.trainedTeams = touristPoint.getTrainedTeams().stream()
-                .map(team -> new TeamDTO(team)).collect(Collectors.toList());
-        this.dismissDate = touristPoint.getDismissDate()
+                .map(TeamDTO::new).collect(Collectors.toList());
+        this.dismissDate = touristPoint.getDismissDate();
     }
 
     public Double getTime() {

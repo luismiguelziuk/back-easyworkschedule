@@ -22,7 +22,7 @@ public class DayDTO {
     public DayDTO(Day day) {
         this.id = day.getId();
         this.dayOfWeek = day.getDayOfWeek();
-        this.shifts = day.getShifts().stream().map(shift -> new ShiftDTO(shift)).collect(Collectors.toList());
+        this.shifts = day.getShifts().stream().map(ShiftDTO::new).collect(Collectors.toList());
 
     }
 }
