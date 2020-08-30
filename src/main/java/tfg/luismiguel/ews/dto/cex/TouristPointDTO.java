@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import tfg.luismiguel.ews.entity.cex.TouristPoint;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,6 +21,7 @@ public class TouristPointDTO {
     private Double openTime;
     private Double closeTime;
     private List<TeamDTO> trainedTeams;
+    private LocalDate dismissDate;
 
     public TouristPointDTO(TouristPoint touristPoint) {
         this.id = touristPoint.getId();
@@ -29,6 +31,7 @@ public class TouristPointDTO {
         this.closeTime = touristPoint.getCloseTime();
         this.trainedTeams = touristPoint.getTrainedTeams().stream()
                 .map(team -> new TeamDTO(team)).collect(Collectors.toList());
+        this.dismissDate = touristPoint.getDismissDate()
     }
 
     public Double getTime() {

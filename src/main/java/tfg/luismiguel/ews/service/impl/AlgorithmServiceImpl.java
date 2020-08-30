@@ -339,7 +339,8 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                 }
             }
         } else {
-            List<TouristInformer> touristInformers = touristInformerRepository.findAll();
+            List<TouristInformer> touristInformers = touristInformerRepository.findAll().stream()
+                    .filter(touristInformer -> touristInformer.getDismissDate()==null).collect(Collectors.toList());
             List<Team> teams = teamRepository.findAll();
             TouristPointDTO breakPoint = new TouristPointDTO(touristPointRepository.findAll().stream()
                     .filter(touristPoint -> touristPoint.getName().equals("Descanso")).findFirst().get());
@@ -406,8 +407,9 @@ public class AlgorithmServiceImpl implements AlgorithmService {
 
     private void getOrderedTouristPoints() {
         touristPoints.addAll(touristPointRepository.findAll().stream()
+                .filter(touristPoint -> !touristPoint.getName().equals("Descanso")
+                && touristPoint.getDismissDate() == null)
                 .map(TouristPointDTO::new)
-                .filter(touristPoint -> !touristPoint.getName().equals("Descanso"))
                 .sorted(Comparator.comparing(TouristPointDTO::getPriority)
                         .reversed())
                 .collect(Collectors.toList()));
