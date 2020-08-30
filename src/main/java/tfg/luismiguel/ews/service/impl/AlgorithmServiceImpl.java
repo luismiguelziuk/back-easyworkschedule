@@ -9,6 +9,7 @@ import tfg.luismiguel.ews.dto.FillWeekDTO;
 import tfg.luismiguel.ews.dto.ShiftDTO;
 import tfg.luismiguel.ews.dto.WeekDTO;
 import tfg.luismiguel.ews.dto.WeekKnappSackDTO;
+import tfg.luismiguel.ews.dto.cex.TeamDTO;
 import tfg.luismiguel.ews.dto.cex.TouristInformerDTO;
 import tfg.luismiguel.ews.dto.cex.TouristPointDTO;
 import tfg.luismiguel.ews.dto.cex.TouristPointDayProblemDTO;
@@ -64,6 +65,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     TeamRepository teamRepository;
 
     private Week weekDatabase;
+    private Week lastWeekDatabase;
     private WeekDTO week;
     private Map<TouristInformerDTO, Double> availableWorkersHours = new LinkedHashMap<>();
     private List<TouristPointDTO> touristPoints = new ArrayList<>();
@@ -80,8 +82,9 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         // para ver si conseguimos la solucion parcial. Esto se intentara n veces tambien y si no se consigue se dara como irresoluble.
         mutateIfErrorFilling(fillWeekDTO);
         if (!errorPoints.isEmpty()) {
+            //TODO Afinar esto
             String message = "";
-            errorPoints.stream().forEach(touristPointDayProblemDTO -> message.concat(touristPointDayProblemDTO.getTouristPoint().getName()).concat(", "));
+            errorPoints.forEach(touristPointDayProblemDTO -> message.concat(touristPointDayProblemDTO.getTouristPoint().getName()).concat(", "));
             throw new EwsException("No tiene solucion, no hay trabajadores suficientes para los puntos { " + message.substring(0, message.length() - 2) + " }");
         }
         // Generamos un weekKnappSackDTO con una copia de la semana actual y su salud.
@@ -183,8 +186,9 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                 dayDTO.getShifts().add(shiftToAdd);
                 availableWorkersHours.computeIfPresent(shiftToAdd.getWorker(), (touristInformerDTO, value) -> value - shiftToAdd.getPoint().getTime());
                 orderByAvailableHours();
-                fillWeek();
+                errorPoints.remove(touristPointDayProblemDTO);
             }
+            fillWeek();
             if (errorPoints.isEmpty()) {
                 n = fillWeekDTO.getNumberIteration();
             }
@@ -206,17 +210,12 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     }
 
     private boolean repeatPointSameDayLastWeek(TouristPointDTO touristPoint, TouristInformerDTO touristInformer, DayDTO day) {
-        try {
-            Week lastWeek = findWeekByNumberAndYear(week.getNumberOfWeek() - 1, week.getYear());
-            return lastWeek.getDays()
-                    .get(day.getDayOfWeek().getValue() - 1).getShifts()
-                    .stream()
-                    .anyMatch(shift ->
-                            shift.getPoint().getId().equals(touristPoint.getId())
-                                    && shift.getWorker().getId().equals(touristInformer.getId()));
-        } catch (EwsException ewsException) {
-            return false;
-        }
+        return lastWeekDatabase != null && lastWeekDatabase.getDays()
+                .get(day.getDayOfWeek().getValue() - 1).getShifts()
+                .stream()
+                .anyMatch(shift ->
+                        shift.getPoint().getId().equals(touristPoint.getId())
+                                && shift.getWorker().getId().equals(touristInformer.getId()));
     }
 
     private boolean repeatPointAtWeek(Map<Long, List<Long>> workerPointMap, TouristPointDTO touristPoint, Long touristInformerId) {
@@ -235,13 +234,18 @@ public class AlgorithmServiceImpl implements AlgorithmService {
 
     private boolean haveCorrectTeamInformerAvailableHours(TouristPointDTO touristPoint, Map.Entry<TouristInformerDTO, Double> entry) {
         double MAX_LAG_HOUR = -1 * 0.25;
-        return touristPoint.getTrainedTeams().contains(entry.getKey().getTeam())
+        return touristPoint.getTrainedTeams().stream().map(TeamDTO::getId).anyMatch(id -> id.equals(entry.getKey().getTeam().getId()))
                 && entry.getValue() - touristPoint.getTime()
                 >= MAX_LAG_HOUR * entry.getKey().getWorkHours();
     }
 
     private void initializeVariables(FillWeekDTO fillWeekDTO) throws EwsException {
         weekDatabase = findWeekByNumberAndYear(fillWeekDTO.getNumberOfWeek(), fillWeekDTO.getYear());
+        try {
+            lastWeekDatabase = findWeekByNumberAndYear(weekDatabase.getNumberOfWeek() - 1, weekDatabase.getYear());
+        } catch (EwsException ewsException) {
+            lastWeekDatabase = null;
+        }
         week = new WeekDTO(weekDatabase);
         findAvailableWorkersHours();
         // Generamos los descansos de la semana a partir de la anterior o de la manera establecidad para la primera vez
@@ -280,13 +284,12 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     }
 
     private void generateBreaks() {
-        try {
-            Week lastWeek = findWeekByNumberAndYear(week.getNumberOfWeek() - 1, week.getYear());
-            for (Day dayLastWeek : lastWeek.getDays()) {
+        if (lastWeekDatabase != null) {
+            for (Day dayLastWeek : lastWeekDatabase.getDays()) {
                 for (ShiftDTO shiftLastWeek : dayLastWeek.getShifts()
                         .stream()
                         .filter(shift -> shift.getPoint().getName().equals("Descanso"))
-                        .map(shift -> new ShiftDTO(shift))
+                        .map(ShiftDTO::new)
                         .collect(Collectors.toList())) {
                     boolean bonusDay = shiftLastWeek.getWorker().getAccumulatedHours() <= (-1 * shiftLastWeek.getWorker().getWorkHours() / 5);
                     ShiftDTO breakShift = new ShiftDTO();
@@ -311,7 +314,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                             break;
                         case THURSDAY:
                             //Si tambien tuvo descanso el miercoles pasado, estamos en el caso en que esta semana tambien descansa el jueves
-                            if (lastWeek.getDays().get(2).getShifts().stream().anyMatch(shift -> shift.getPoint().getName().equals("Descanso")
+                            if (lastWeekDatabase.getDays().get(2).getShifts().stream().anyMatch(shift -> shift.getPoint().getName().equals("Descanso")
                                     && Objects.equals(shift.getWorker().getId(), shiftLastWeek.getWorker().getId()))) {
                                 week.getDays().get(4).getShifts().add(breakShift);
                             } else {
@@ -336,7 +339,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                     }
                 }
             }
-        } catch (EwsException e) {
+        } else {
             List<TouristInformer> touristInformers = touristInformerRepository.findAll();
             List<Team> teams = teamRepository.findAll();
             TouristPointDTO breakPoint = new TouristPointDTO(touristPointRepository.findAll().stream()
@@ -345,7 +348,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                 DayOfWeek lastStartBreak = DayOfWeek.MONDAY;
                 for (TouristInformerDTO touristInformer : touristInformers.stream()
                         .filter(touristInformer -> touristInformer.getTeam().equals(team))
-                        .map(touristInformer -> new TouristInformerDTO(touristInformer))
+                        .map(TouristInformerDTO::new)
                         .collect(Collectors.toList())) {
                     boolean bonusDay = touristInformer.getAccumulatedHours() <= (-1 * touristInformer.getWorkHours() / 5);
                     ShiftDTO shift1 = new ShiftDTO();
@@ -395,7 +398,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
 
     private void getOrderedTouristPoints() {
         touristPoints = touristPointRepository.findAll().stream()
-                .map(touristPoint -> new TouristPointDTO(touristPoint))
+                .map(TouristPointDTO::new)
                 .filter(touristPoint -> !touristPoint.getName().equals("Descanso"))
                 .sorted(Comparator.comparing(TouristPointDTO::getPriority)
                         .reversed())
