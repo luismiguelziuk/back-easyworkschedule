@@ -5,9 +5,10 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import tfg.luismiguel.ews.dto.WeekDTO;
+import tfg.luismiguel.ews.dto.creation.WeekCreationDTO;
 import tfg.luismiguel.ews.entity.Day;
 import tfg.luismiguel.ews.entity.Week;
+import tfg.luismiguel.ews.exception.EwsException;
 import tfg.luismiguel.ews.repository.DayRepository;
 import tfg.luismiguel.ews.repository.WeekRepository;
 import tfg.luismiguel.ews.service.TemporalService;
@@ -28,7 +29,7 @@ public class TemporalServiceImpl implements TemporalService {
     private DayRepository dayRepository;
 
     @Override
-    public Week createWeek(WeekDTO weekDTO) {
+    public Week createWeek(WeekCreationDTO weekDTO) {
         Week week = new Week();
         week.setNumberOfWeek(weekDTO.getNumberOfWeek());
         week.setYear(weekDTO.getYear());
@@ -39,6 +40,16 @@ public class TemporalServiceImpl implements TemporalService {
         week.setDays(days);
         weekRepository.save(week);
         return week;
+    }
+
+    public Week findWeekByNumberAndYear(Long numberOfWeek, Long year) throws EwsException {
+        try {
+            return weekRepository.findAll().stream().filter(week ->
+                    week.getNumberOfWeek().equals(numberOfWeek)
+                            && week.getYear().equals(year)).findFirst().get();
+        } catch (Exception e) {
+            throw new EwsException("No existe esta semana, creela primero");
+        }
     }
 
     private Day createDay(int dayOfWeek) {

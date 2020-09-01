@@ -6,7 +6,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
-import tfg.luismiguel.ews.dto.WeekDTO;
+import tfg.luismiguel.ews.dto.creation.WeekCreationDTO;
 import tfg.luismiguel.ews.repository.DayRepository;
 import tfg.luismiguel.ews.repository.WeekRepository;
 import tfg.luismiguel.ews.service.impl.TemporalServiceImpl;
@@ -34,7 +34,7 @@ public class TemporalServiceTest {
 
     @Test
     public void createTouristPointTest() {
-        temporalService.createWeek(new WeekDTO());
+        temporalService.createWeek(new WeekCreationDTO());
         verify(weekRepository, atLeast(1)).save(any());
         verify(dayRepository, atLeast(7)).save(any());
     }

@@ -1,4 +1,4 @@
-package tfg.luismiguel.ews.dto;
+package tfg.luismiguel.ews.dto.algorithm;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -13,4 +13,5 @@ public class FillWeekDTO {
     Long numberOfWeek;
     Long year;
     int numberIteration;
+    int numberOfMutation;
 }

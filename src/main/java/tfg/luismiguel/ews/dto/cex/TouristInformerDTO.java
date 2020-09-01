@@ -17,7 +17,6 @@ public class TouristInformerDTO {
     private TeamDTO team;
     private String name;
     private Double workHours;
-    private Double accumulatedHours;
     private LocalDate dismissDate;
 
     public TouristInformerDTO(TouristInformer touristInformer) {
@@ -25,7 +24,6 @@ public class TouristInformerDTO {
         this.team = new TeamDTO(touristInformer.getTeam());
         this.name = touristInformer.getName();
         this.workHours = touristInformer.getWorkHours();
-        this.accumulatedHours = touristInformer.getAccumulatedHours();
         this.dismissDate = touristInformer.getDismissDate();
     }
 }

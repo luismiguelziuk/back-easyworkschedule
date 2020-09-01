@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import tfg.luismiguel.ews.dto.WeekDTO;
+import tfg.luismiguel.ews.dto.creation.WeekCreationDTO;
 import tfg.luismiguel.ews.entity.Week;
 import tfg.luismiguel.ews.service.TemporalService;
 
@@ -32,7 +32,7 @@ public class TemporalController {
             @ApiResponse(responseCode = "404", description = "Week not created",
                     content = @Content)})
     @PostMapping("/create/week")
-    public ResponseEntity<Week> createTouristInformer(@RequestBody WeekDTO weekDTO) {
+    public ResponseEntity<Week> createTouristInformer(@RequestBody WeekCreationDTO weekDTO) {
         Week week = temporalService.createWeek(weekDTO);
         return new ResponseEntity<>(week, HttpStatus.CREATED);
     }

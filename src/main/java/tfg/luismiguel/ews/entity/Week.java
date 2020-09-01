@@ -33,4 +33,6 @@ public class Week {
     private Long year;
     @OneToMany
     private List<Day> days;
+    @OneToMany
+    List<AccumulatedHours> accumulatedHours;
 }

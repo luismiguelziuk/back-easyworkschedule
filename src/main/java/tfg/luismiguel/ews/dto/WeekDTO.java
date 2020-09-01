@@ -21,7 +21,6 @@ public class WeekDTO {
     private Long numberOfWeek;
     private Long year;
     private List<DayDTO> days;
-    private DayOfWeek dayOfWeekStart;
 
     public WeekDTO(Week week) {
         this.id = week.getId();

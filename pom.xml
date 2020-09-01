@@ -10,7 +10,7 @@
 	</parent>
 	<groupId>tfg.luismiguel</groupId>
 	<artifactId>ews</artifactId>
-	<version>0.3.4</version>
+	<version>1.0.0</version>
 	<name>ews</name>
 	<description>Backend del trabajo de fin de grado para la universidad de Sevilla del alumno Luis Miguel Garcia Rodriguez</description>
 
@@ -68,6 +68,11 @@
 			<groupId>org.springdoc</groupId>
 			<artifactId>springdoc-openapi-ui</artifactId>
 			<version>1.2.32</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.poi</groupId>
+			<artifactId>poi-ooxml</artifactId>
+			<version>4.1.1</version>
 		</dependency>
 	</dependencies>
 
