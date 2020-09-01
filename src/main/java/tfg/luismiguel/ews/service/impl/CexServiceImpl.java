@@ -40,9 +40,13 @@ public class CexServiceImpl implements CexService {
         touristPoint.setOpenTime(touristPointDTO.getOpenTime());
         touristPoint.setCloseTime(touristPointDTO.getCloseTime());
         touristPoint.setPriority(touristPointDTO.getPriority());
-        touristPoint.setTrainedTeams(touristPointDTO.getTrainedTeams().stream()
-                .map(teamDTO -> teamRepository.findById(teamDTO.getId()).get())
-                .collect(Collectors.toList()));
+        if (touristPointDTO.getTrainedTeams() != null && touristPointDTO.getTrainedTeams().isEmpty()) {
+            touristPoint.setTrainedTeams(touristPointDTO.getTrainedTeams().stream()
+                    .map(teamDTO -> teamRepository.findById(teamDTO.getId()).get())
+                    .collect(Collectors.toList()));
+        } else {
+            touristPoint.setTrainedTeams(new ArrayList<>());
+        }
         touristPointRepository.save(touristPoint);
         return touristPoint;
     }
@@ -52,7 +56,9 @@ public class CexServiceImpl implements CexService {
         TouristInformer touristInformer = new TouristInformer();
         touristInformer.setName(touristInformerDTO.getName());
         touristInformer.setWorkHours(touristInformerDTO.getWorkHours());
-        touristInformer.setTeam(teamRepository.findById(touristInformerDTO.getTeam().getId()).get());
+        if(touristInformerDTO.getTeam()!=null) {
+            touristInformer.setTeam(teamRepository.findById(touristInformerDTO.getTeam().getId()).get());
+        }
         touristInformerRepository.save(touristInformer);
         return touristInformer;
     }

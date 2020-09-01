@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.time.DayOfWeek;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -13,5 +12,4 @@ import java.time.DayOfWeek;
 public class WeekCreationDTO {
     private Long numberOfWeek;
     private Long year;
-    private DayOfWeek dayOfWeekStart;
 }

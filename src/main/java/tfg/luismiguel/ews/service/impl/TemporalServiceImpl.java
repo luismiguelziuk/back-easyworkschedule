@@ -34,7 +34,7 @@ public class TemporalServiceImpl implements TemporalService {
         week.setNumberOfWeek(weekDTO.getNumberOfWeek());
         week.setYear(weekDTO.getYear());
         List<Day> days = new ArrayList<>();
-        for (int i = weekDTO.getDayOfWeekStart().getValue(); i <= 7; i++) {
+        for (int i = 1; i <= 7; i++) {
             days.add(createDay(i));
         }
         week.setDays(days);
