@@ -14,7 +14,7 @@ import tfg.luismiguel.ews.dto.algorithm.cex.TouristPointDayProblemDTO;
 import tfg.luismiguel.ews.dto.cex.TeamDTO;
 import tfg.luismiguel.ews.dto.cex.TouristInformerDTO;
 import tfg.luismiguel.ews.dto.cex.TouristPointDTO;
-import tfg.luismiguel.ews.entity.AccumulatedHours;
+import tfg.luismiguel.ews.entity.AccumulatedHour;
 import tfg.luismiguel.ews.entity.Day;
 import tfg.luismiguel.ews.entity.Shift;
 import tfg.luismiguel.ews.entity.Week;
@@ -99,9 +99,9 @@ public class AlgorithmServiceImpl implements AlgorithmService {
             dayRepository.save(dayDatabase);
         }
         //Actualizamos las horas acumuladas
-        List<AccumulatedHours> accumulatedHoursList = new ArrayList<>();
+        List<AccumulatedHour> accumulatedHoursList = new ArrayList<>();
         for (TouristInformerDTO touristInformerDTO : weekKnappSackDTO.getAvailableWorkersHours().keySet()) {
-            AccumulatedHours accumulatedHour =  new AccumulatedHours();
+            AccumulatedHour accumulatedHour =  new AccumulatedHour();
             TouristInformer touristInformer = touristInformerRepository.findById(touristInformerDTO.getId()).get();
             accumulatedHour.setWorker(touristInformer);
             accumulatedHour.setAccumulatedHour(weekKnappSackDTO.getAvailableWorkersHours().get(touristInformerDTO));
@@ -159,8 +159,8 @@ public class AlgorithmServiceImpl implements AlgorithmService {
             day.getShifts().removeAll(shiftsToRemove);
             dayRepository.save(day);
         }
-        List<AccumulatedHours> accumulatedHoursToRemove = new ArrayList<>();
-        for (AccumulatedHours accumulatedHours : week.getAccumulatedHours()) {
+        List<AccumulatedHour> accumulatedHoursToRemove = new ArrayList<>();
+        for (AccumulatedHour accumulatedHours : week.getAccumulatedHours()) {
             accumulatedHoursToRemove.add(accumulatedHours);
             accumulatedRepository.delete(accumulatedHours);
         }

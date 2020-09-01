@@ -18,8 +18,8 @@ import javax.validation.constraints.NotBlank;
 @Getter
 @Setter
 @Entity
-@Table(name = "accumulatedHours")
-public class AccumulatedHours {
+@Table(name = "accumulatedHour")
+public class AccumulatedHour {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

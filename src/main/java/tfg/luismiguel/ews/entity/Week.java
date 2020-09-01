@@ -34,5 +34,5 @@ public class Week {
     @OneToMany
     private List<Day> days;
     @OneToMany
-    List<AccumulatedHours> accumulatedHours;
+    List<AccumulatedHour> accumulatedHours;
 }
