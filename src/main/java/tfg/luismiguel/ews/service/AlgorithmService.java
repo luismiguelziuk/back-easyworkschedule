@@ -7,6 +7,6 @@ import tfg.luismiguel.ews.exception.EwsException;
 
 public interface AlgorithmService {
     void saveAll(WeekKnappSackDTO weekKnappSackDTO, FillWeekDTO fillWeekDTO) throws EwsException;
-    WeekKnappSackDTO fillCompleteWeek(FillWeekDTO fillWeekDTO) throws EwsException;
+    WeekKnappSackDTO fillWeekRecursive(FillWeekDTO fillWeekDTO) throws EwsException;
     void cleanWeek(CleanWeekDTO cleanWeekDTO) throws EwsException;
 }

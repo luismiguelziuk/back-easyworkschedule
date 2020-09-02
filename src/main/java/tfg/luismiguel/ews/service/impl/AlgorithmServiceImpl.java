@@ -75,11 +75,17 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     @Autowired
     CexService cexService;
 
+    // Semana anterior
     private Week lastWeekDatabase;
+    // Semana actual sobre la que estamos trabajando
     private WeekDTO week;
+    // Mapa con los trabajadores, y las horas que tienen disponibles esta semana
     private Map<TouristInformerDTO, Double> availableWorkersHours;
+    // Listado de todos los puntos de informacion turistico que hay que incluir en el cuadrante
     private List<TouristPointDTO> touristPoints;
+    // Listado de puntos que no se han podido rellenar
     private List<TouristPointDayProblemDTO> errorPoints;
+    //Solucion al problema
     public static WeekKnappSackDTO solution;
 
     @Override
@@ -101,7 +107,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         //Actualizamos las horas acumuladas
         List<AccumulatedHour> accumulatedHoursList = new ArrayList<>();
         for (TouristInformerDTO touristInformerDTO : weekKnappSackDTO.getAvailableWorkersHours().keySet()) {
-            AccumulatedHour accumulatedHour =  new AccumulatedHour();
+            AccumulatedHour accumulatedHour = new AccumulatedHour();
             TouristInformer touristInformer = touristInformerRepository.findById(touristInformerDTO.getId()).get();
             accumulatedHour.setWorker(touristInformer);
             accumulatedHour.setAccumulatedHour(weekKnappSackDTO.getAvailableWorkersHours().get(touristInformerDTO));
@@ -113,28 +119,25 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     }
 
     @Override
-    public WeekKnappSackDTO fillCompleteWeek(FillWeekDTO fillWeekDTO) throws EwsException {
+    public WeekKnappSackDTO fillWeekRecursive(FillWeekDTO fillWeekDTO) throws EwsException {
         // Inicializamos las variables
         initializeVariables(fillWeekDTO);
         // En una primera instancia rellenamos la semana cumpliendo los requisitos, y tratando de no repetir puntos
         fillWeek(false);
-        // Metodo para mutar un punto de los puntos de informacion para el dia que ha dado error.
+        checkIsBetterSolution();
+        // Si no es solucion final muta un punto de los puntos de informacion para el dia que ha dado error.
         // Tratando de rellenarlo con un trabajador que ya este ocupado esa semana, metiendo uno libre en el lugar que ocupaba,
         // para ver si conseguimos la solucion parcial. Esto se intentara n veces tambien y si no se consigue se dara como irresoluble.
-        mutateIfErrorFilling(fillWeekDTO);
-        // Para la primera iteracion inicializamos la mejor solucion como la primera dada.
-        if (solution == null) {
-            solution = generateSolution();
-            //Si la solucion que propone esta iteracion es mejor que las anteriores la guardamos como mejor solucion
-        } else if (getHealthFromAvailableWorkers(availableWorkersHours, errorPoints.size()) < solution.getHealth()) {
-            solution = generateSolution();
+        if (solution.getHealth() != 0) {
+            mutateIfErrorFilling(fillWeekDTO);
+            checkIsBetterSolution();
         }
         // Solucion final al problema
         if (solution.getHealth() == 0) {
             fillWeekDTO.setNumberIteration(0);
         } else if (fillWeekDTO.getNumberIteration() >= 0) {
             fillWeekDTO.setNumberIteration(fillWeekDTO.getNumberIteration() - 1);
-            this.fillCompleteWeek(fillWeekDTO);
+            this.fillWeekRecursive(fillWeekDTO);
         }
         // No hemos optenido solucion parcial.
         if (!solution.getErrors().isEmpty()) {
@@ -145,6 +148,16 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         }
         // Devolvemos el mejor resultado que hemos optenido
         return solution;
+    }
+
+    private void checkIsBetterSolution() {
+        // Para la primera iteracion inicializamos la mejor solucion como la primera dada.
+        if (solution == null) {
+            solution = generateSolution();
+            //Si la solucion que propone esta iteracion es mejor que las anteriores la guardamos como mejor solucion
+        } else if (getHealthFromAvailableWorkers(availableWorkersHours, errorPoints.size()) < solution.getHealth()) {
+            solution = generateSolution();
+        }
     }
 
     @Override
@@ -192,6 +205,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                         if (isCorrectWorker(workerPointMap, busyWorkersToday, touristPoint, entry, day,
                                 canRepeatPoint)) {
                             associateShift(day, touristPoint, entry.getKey(), workerPointMap);
+                            // Actualizamos la lista de trabajadores ocupados para hoy
                             busyWorkersToday.add(entry.getKey().getId());
                             // Actualizamos las horas disponibles de esta semana para el trabajador
                             entry.setValue(entry.getValue() - touristPoint.getTime());
@@ -211,11 +225,16 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         int n = 0;
         if (!errorPoints.isEmpty()) {
             while (n < fillWeekDTO.getNumberOfMutation()) {
+                //Obtenemos un punto que de error del listado, de manera aleatoria.
                 TouristPointDayProblemDTO touristPointDayProblemDTO = errorPoints.stream()
                         .skip((int) (errorPoints.size() * Math.random())).findFirst().orElse(null);
                 if (touristPointDayProblemDTO != null) {
+                    //Obtiene el dia completo en el que se encontro el problema.
                     DayDTO dayDTO = week.getDays().get(touristPointDayProblemDTO.getDay().getDayOfWeek().getValue() - 1);
                     TouristPointDTO touristPoint = touristPointDayProblemDTO.getTouristPoint();
+                    //Obtiene un listado filtrado con los turnos ya rellenos de ese dia que tengan un trabajador capaz de rellenar
+                    // el punto que dio problemas. Es decir que sea del equipo correcto y el tiempo que trabajaba en el sea igual
+                    // o superior al que se necesita en el que dio problema.
                     List<ShiftDTO> filteredShifs = dayDTO.getShifts().stream()
                             .filter(shiftDTO -> !shiftDTO.getPoint().getName().equals("Descanso")
                                     && !shiftDTO.getPoint().getName().equals("DescansoAleatorio")
@@ -225,20 +244,24 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                                     && touristPoint.getTime() <= shiftDTO.getPoint().getTime())
                             .collect(Collectors.toList());
                     if (!filteredShifs.isEmpty()) {
+                        //De la lista de turnos filtrados se coge uno de manera aleatoria
                         ShiftDTO shiftToRemove = filteredShifs.stream()
                                 .skip((int) (filteredShifs.size() * Math.random()))
                                 .findFirst().orElse(null);
                         if (shiftToRemove != null) {
+                            // Se añade un turno nuevo para el punto que dio problemas
                             ShiftDTO shiftToAdd = new ShiftDTO();
                             shiftToAdd.setPoint(touristPoint);
                             shiftToAdd.setWorker(shiftToRemove.getWorker());
+                            // Se borra el turno que hemos obtenido aleatoriamente de los filtrados
                             dayDTO.getShifts().remove(shiftToRemove);
+                            // Se recalculan las horas acumuladas
                             availableWorkersHours.computeIfPresent(shiftToRemove.getWorker(), (touristInformerDTO, value) -> value + shiftToRemove.getPoint().getTime());
                             dayDTO.getShifts().add(shiftToAdd);
                             availableWorkersHours.computeIfPresent(shiftToAdd.getWorker(), (touristInformerDTO, value) -> value - shiftToAdd.getPoint().getTime());
                             orderByAvailableHours();
                             errorPoints.clear();
-                            // En este momento es cuando podemos permitir el repetir punto en la semana
+                            // Y se intenta rellenar de nuevo, en este ocasion es cuando podemos permitir el repetir punto en la semana
                             fillWeek(true);
                         }
                     }
@@ -316,12 +339,12 @@ public class AlgorithmServiceImpl implements AlgorithmService {
             lastWeekDatabase = null;
         }
         week = new WeekDTO(weekDatabase);
+        // Cargamos el mapa de trabajadores y horas disponibles a partir de las horas por las que estan contratados semanalmente y las horas acumuladas de la semana anterior
         findAvailableWorkersHours();
-        // Generamos los descansos de la semana a partir de la anterior o de la manera establecidad para la primera vez
-        // teniendo en cuenta los descansos para los trabajadores que tengan las suficientes horas acumuladas negativas.
+        // Generamos los descansos de la semana a partir de la anterior o de la manera establecida para la primera vez
+        // para la segunda semana hay un factor aleatorio
         generateBreaks();
-        // Cargamos la lista de puntos disponibles ordenados por prioridad, obviando el punto descanso
-        // que se rellenara de forma independiente.
+        // Cargamos la lista de puntos disponibles ordenados por prioridad
         getOrderedTouristPoints();
     }
 
@@ -329,9 +352,9 @@ public class AlgorithmServiceImpl implements AlgorithmService {
         Double accumulated = 0.0;
         for (TouristInformer touristInformer : touristInformerRepository.findAll().stream()
                 .filter(worker -> worker.getDismissDate() == null).collect(Collectors.toList())) {
-            if(lastWeekDatabase!=null) {
+            if (lastWeekDatabase != null) {
                 accumulated = lastWeekDatabase.getAccumulatedHours().stream()
-                        .filter(accumulatedHours ->  accumulatedHours.getWorker().getId().equals(touristInformer.getId()))
+                        .filter(accumulatedHours -> accumulatedHours.getWorker().getId().equals(touristInformer.getId()))
                         .findFirst().get().getAccumulatedHour();
             }
             availableWorkersHours.put(new TouristInformerDTO(touristInformer), touristInformer.getWorkHours() + accumulated);
@@ -423,7 +446,7 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                     shift2.setPoint(breakPoint);
                     switch (lastStartBreak) {
                         case MONDAY:
-                            addBreakDay(shift1, DayOfWeek.WEDNESDAY );
+                            addBreakDay(shift1, DayOfWeek.WEDNESDAY);
                             shift2.setPoint(randomBreakShift);
                             addBreakDay(shift2, dayRandomList.stream()
                                     .skip((int) (dayRandomList.size() * Math.random()))
@@ -431,13 +454,13 @@ public class AlgorithmServiceImpl implements AlgorithmService {
                             lastStartBreak = DayOfWeek.WEDNESDAY;
                             break;
                         case WEDNESDAY:
-                            addBreakDay(shift1, DayOfWeek.THURSDAY );
+                            addBreakDay(shift1, DayOfWeek.THURSDAY);
                             addBreakDay(shift2, DayOfWeek.FRIDAY);
                             lastStartBreak = DayOfWeek.THURSDAY;
                             break;
                         case THURSDAY:
                             addBreakDay(shift1, DayOfWeek.SATURDAY);
-                            addBreakDay(shift2, DayOfWeek.SUNDAY );
+                            addBreakDay(shift2, DayOfWeek.SUNDAY);
                             lastStartBreak = DayOfWeek.SATURDAY;
                             break;
                         case SATURDAY:
@@ -500,8 +523,8 @@ public class AlgorithmServiceImpl implements AlgorithmService {
     }
 
     private Double getHealthFromAvailableWorkers(Map<TouristInformerDTO, Double> availableWorkersHours, int errorPoints) {
-        //Media
-        return ((errorPoints * errorPoints) + 0.1) * Math.abs(availableWorkersHours.values().stream().mapToDouble(a -> a).average().getAsDouble())
+        //Cantidad de puntos con error al cuadrado con un factor de + 0.1 para que cuando no haya errores no de falsas soluciones finales, multiplicado por el valor absoluto de la media del desfase horario por la moda en valor absoluto del mismo.
+        return ((errorPoints * errorPoints) + 0.1) * (Math.abs(availableWorkersHours.values().stream().mapToDouble(a -> a).average().getAsDouble()))+0.1
                 * availableWorkersHours.values().stream().map(value -> value = Math.abs(value)).max(Double::compareTo).get();
     }
 
