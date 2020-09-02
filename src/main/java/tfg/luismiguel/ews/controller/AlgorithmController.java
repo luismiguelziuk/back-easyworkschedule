@@ -37,7 +37,7 @@ public class AlgorithmController {
     @PutMapping("/fill/week")
     public ResponseEntity<WeekKnappSackDTO> fillWeek(@RequestBody FillWeekDTO fillWeekDTO) throws EwsException {
         AlgorithmServiceImpl.solution = null;
-        WeekKnappSackDTO solution = algorithmService.fillCompleteWeek(fillWeekDTO);
+        WeekKnappSackDTO solution = algorithmService.fillWeekRecursive(fillWeekDTO);
         algorithmService.saveAll(solution, fillWeekDTO);
         return new ResponseEntity<>(solution, HttpStatus.CREATED);
     }
